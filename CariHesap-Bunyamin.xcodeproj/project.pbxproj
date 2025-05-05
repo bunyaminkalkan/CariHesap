@@ -13,6 +13,9 @@
 		735A78EB2DC8FD160005B4FE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 735A78E92DC8FD160005B4FE /* Main.storyboard */; };
 		735A78ED2DC8FD180005B4FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 735A78EC2DC8FD180005B4FE /* Assets.xcassets */; };
 		735A78F02DC8FD180005B4FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 735A78EE2DC8FD180005B4FE /* LaunchScreen.storyboard */; };
+		735A78FC2DC905BF0005B4FE /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A78FB2DC905BF0005B4FE /* Account.swift */; };
+		735A79002DC908530005B4FE /* AccountDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A78FF2DC908530005B4FE /* AccountDetailViewController.swift */; };
+		735A79022DC913D00005B4FE /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A79012DC913D00005B4FE /* Transaction.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +27,9 @@
 		735A78EC2DC8FD180005B4FE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		735A78EF2DC8FD180005B4FE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		735A78F12DC8FD180005B4FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		735A78FB2DC905BF0005B4FE /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
+		735A78FF2DC908530005B4FE /* AccountDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDetailViewController.swift; sourceTree = "<group>"; };
+		735A79012DC913D00005B4FE /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +69,9 @@
 				735A78EC2DC8FD180005B4FE /* Assets.xcassets */,
 				735A78EE2DC8FD180005B4FE /* LaunchScreen.storyboard */,
 				735A78F12DC8FD180005B4FE /* Info.plist */,
+				735A78FB2DC905BF0005B4FE /* Account.swift */,
+				735A78FF2DC908530005B4FE /* AccountDetailViewController.swift */,
+				735A79012DC913D00005B4FE /* Transaction.swift */,
 			);
 			path = "CariHesap-Bunyamin";
 			sourceTree = "<group>";
@@ -139,6 +148,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				735A78E82DC8FD160005B4FE /* ViewController.swift in Sources */,
+				735A79002DC908530005B4FE /* AccountDetailViewController.swift in Sources */,
+				735A79022DC913D00005B4FE /* Transaction.swift in Sources */,
+				735A78FC2DC905BF0005B4FE /* Account.swift in Sources */,
 				735A78E42DC8FD160005B4FE /* AppDelegate.swift in Sources */,
 				735A78E62DC8FD160005B4FE /* SceneDelegate.swift in Sources */,
 			);
