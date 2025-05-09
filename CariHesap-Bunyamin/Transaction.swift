@@ -7,15 +7,16 @@
 
 import Foundation
 
-struct Transaction {
+struct Transaction: Codable {
     var description: String
     var amount: Double
-    var type: TransactionType // Alınacak, Verilecek, Alındı, Ödendi gibi
+    var type: TransactionType
 }
 
-enum TransactionType: String, CaseIterable {
-    case receivable = "Receivable"
-    case payable = "Payable"
-    case received = "Received"
-    case paid = "Paid"
+enum TransactionType: String, CaseIterable, Codable {
+    case paid = "Ödendi"
+    case received = "Alındı"
+    case payable = "Ödenecek"
+    case receivable = "Alınacak"
 }
+

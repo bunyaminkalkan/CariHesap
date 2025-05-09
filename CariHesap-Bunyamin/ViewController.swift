@@ -1,33 +1,36 @@
 import UIKit
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-
+    
     @IBOutlet weak var accountsTableView: UITableView!
     var accounts: [Account] = []
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Örnek hesaplar ekleyelim (gerçek uygulamada veritabanından veya başka bir kaynaktan alınır)
-        accounts = [
-            Account(name: "Ali Yılmaz", email: "ali@example.com", currentBalance: 1500.75, futureBalance: 1800.50),
-            Account(name: "Ayşe Demir", email: "ayse@example.com", currentBalance: -250.20, futureBalance: 100.00)
-        ]
-
+        loadAccountsFromUserDefaults()
+        
         accountsTableView.dataSource = self
         accountsTableView.delegate = self
     }
-
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadAccountsFromUserDefaults() // UserDefaults'tan verileri yükle
+        accountsTableView.reloadData() // Tabloyu yeniden yükle
+    }
+    
     // MARK: - Table View Data Source Methods
-
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return accounts.count
     }
-
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "AccountCell", for: indexPath)
-
+        
         let account = accounts[indexPath.row]
-
+        
         // Hücre içeriğini yapılandırın (etiketlere değerleri atayın)
         var accountNameLabel: UILabel? = cell.viewWithTag(1) as? UILabel
         if accountNameLabel == nil {
@@ -37,7 +40,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             cell.contentView.addSubview(accountNameLabel!)
         }
         accountNameLabel?.text = account.name
-
+        
         var currentBalanceLabel: UILabel? = cell.viewWithTag(2) as? UILabel
         if currentBalanceLabel == nil {
             currentBalanceLabel = UILabel()
@@ -47,7 +50,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             cell.contentView.addSubview(currentBalanceLabel!)
         }
         currentBalanceLabel?.text = "Güncel: \(String(format: "%.2f", account.currentBalance)) TL"
-
+        
         var futureBalanceLabel: UILabel? = cell.viewWithTag(3) as? UILabel
         if futureBalanceLabel == nil {
             futureBalanceLabel = UILabel()
@@ -57,56 +60,85 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             cell.contentView.addSubview(futureBalanceLabel!)
         }
         futureBalanceLabel?.text = "Gelecek: \(String(format: "%.2f", account.futureBalance)) TL"
-
+        
         return cell
     }
-
+    
     // MARK: - Table View Delegate Methods
-
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // İkinci ekrana geçiş burada yapılacak
         let selectedAccount = accounts[indexPath.row]
         performSegue(withIdentifier: "goToDetailScreen", sender: selectedAccount)
         tableView.deselectRow(at: indexPath, animated: true)
     }
-
+    
     // MARK: - Adding New Account
-
+    
     @IBAction func newAccountButtonTapped(_ sender: UIButton) {
-        // Yeni hesap ekleme pop-up'ı burada gösterilecek
-        let alertController = UIAlertController(title: "Add New Account", message: "Please enter account details.", preferredStyle: .alert)
-
-        alertController.addTextField { (textField) in
-            textField.placeholder = "Account Name"
+        let alertController = UIAlertController(title: "Yeni Hesap Ekle", message: "Hesap bilgilerini girin.", preferredStyle: .alert)
+        
+        alertController.addTextField { textField in
+            textField.placeholder = "İsim"
         }
-
-        alertController.addTextField { (textField) in
-            textField.placeholder = "Email"
+        
+        alertController.addTextField { textField in
+            textField.placeholder = "E-posta"
             textField.keyboardType = .emailAddress
         }
-
-        let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] (_) in
-            guard let nameTextField = alertController.textFields?[0], let emailTextField = alertController.textFields?[1],
-                  let name = nameTextField.text, let email = emailTextField.text, !name.isEmpty else { return }
-
-            let newAccount = Account(name: name, email: email, currentBalance: 0.0, futureBalance: 0.0)
-            self?.accounts.append(newAccount)
-            self?.accountsTableView.reloadData()
+        
+        alertController.addTextField { textField in
+            textField.placeholder = "Güncel Bakiye"
+            textField.keyboardType = .decimalPad
         }
-
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-
+        
+        let saveAction = UIAlertAction(title: "Kaydet", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let name = alertController.textFields?[0].text, !name.isEmpty,
+                  let email = alertController.textFields?[1].text,
+                  let balanceText = alertController.textFields?[2].text,
+                  let currentBalance = Double(balanceText) else {
+                return
+            }
+            
+            let newAccount = Account(name: name, email: email, currentBalance: currentBalance, futureBalance: currentBalance, transactions: [])
+            self.accounts.append(newAccount)
+            self.saveAccountsToUserDefaults()
+            self.accountsTableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "İptal", style: .cancel)
+        
         alertController.addAction(saveAction)
         alertController.addAction(cancelAction)
-
-        present(alertController, animated: true, completion: nil)
+        
+        present(alertController, animated: true)
     }
-
+    
+    
+    func saveAccountsToUserDefaults() {
+        if let encodedData = try? JSONEncoder().encode(accounts) {
+            UserDefaults.standard.set(encodedData, forKey: "savedAccounts")
+        }
+    }
+    
+    func loadAccountsFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: "savedAccounts"),
+           let decodedAccounts = try? JSONDecoder().decode([Account].self, from: data) {
+            accounts = decodedAccounts
+        }
+    }
+    
+    
     // MARK: - Segue Preparation
-
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "goToDetailScreen", let detailVC = segue.destination as? AccountDetailViewController, let account = sender as? Account {
-            detailVC.selectedAccount = account
+        if segue.identifier == "goToDetailScreen",
+           let destinationVC = segue.destination as? AccountDetailViewController,
+           let selectedIndexPath = accountsTableView.indexPathForSelectedRow {
+            
+            let selectedAccount = accounts[selectedIndexPath.row]
+            destinationVC.selectedAccount = selectedAccount
         }
     }
 }

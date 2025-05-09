@@ -1,5 +1,6 @@
 import UIKit
 
+
 class AccountDetailViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet weak var transactionsTableView: UITableView!
@@ -8,30 +9,20 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     
     var selectedAccount: Account?
     var transactions: [Transaction] = []
+    var selectedTransactionType: TransactionType = .received
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         transactionsTableView.dataSource = self
         transactionsTableView.delegate = self
         
+        loadTransactions()
+        
         if let account = selectedAccount {
             updateBalanceLabels(account: account)
-            
-            // Örnek hareketler (gerçek uygulamada veritabanından alınır)
-            transactions = [
-                Transaction(description: "March Rent", amount: -500.0, type: .paid),
-                Transaction(description: "April Sales", amount: 800.0, type: .received)
-            ]
-            transactionsTableView.reloadData()
         }
     }
-    
-    func updateBalanceLabels(account: Account) {
-        currentBalanceLabel.text = "Current: \(String(format: "%.2f", account.currentBalance)) TL"
-        futureBalanceLabel.text = "Future: \(String(format: "%.2f", account.futureBalance)) TL"
-    }
-    
-    // MARK: - Table View Data Source
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return transactions.count
@@ -42,87 +33,146 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
         
         let transaction = transactions[indexPath.row]
         
-        var descriptionLabel: UILabel? = cell.viewWithTag(1) as? UILabel
-        if descriptionLabel == nil {
-            descriptionLabel = UILabel()
-            descriptionLabel?.tag = 1
-            descriptionLabel?.frame = CGRect(x: 15, y: 15, width: 200, height: 20)
-            cell.contentView.addSubview(descriptionLabel!)
+        // Description Label'ı ayarla
+        if let descriptionLabel = cell.viewWithTag(1) as? UILabel {
+            descriptionLabel.text = transaction.description
         }
-        descriptionLabel?.text = transaction.description
         
-        var amountLabel: UILabel? = cell.viewWithTag(2) as? UILabel
-        if amountLabel == nil {
-            amountLabel = UILabel()
-            amountLabel?.tag = 2
-            amountLabel?.frame = CGRect(x: cell.contentView.frame.width - 115, y: 15, width: 100, height: 20)
-            amountLabel?.textAlignment = .right
-            cell.contentView.addSubview(amountLabel!)
+        // Amount Label'ı ayarla
+        if let amountLabel = cell.viewWithTag(2) as? UILabel {
+            amountLabel.text = "\(String(format: "%.2f", transaction.amount)) TL"
         }
-        amountLabel?.text = "\(String(format: "%.2f", transaction.amount)) TL"
+        
+        // Transaction Type Label'ı ayarla
+        if let typeLabel = cell.viewWithTag(3) as? UILabel {
+            typeLabel.text = transaction.type.rawValue
+        }
         
         return cell
     }
     
-    // MARK: - Adding New Transaction
     
+    func updateBalanceLabels(account: Account) {
+        currentBalanceLabel.text = "Current: \(String(format: "%.2f", account.currentBalance)) TL"
+        futureBalanceLabel.text = "Future: \(String(format: "%.2f", account.futureBalance)) TL"
+    }
+    
+    // MARK: - Add New Transaction
     @IBAction func newTransactionButtonTapped(_ sender: UIButton) {
-        let alertController = UIAlertController(title: "Add New Transaction", message: "Please enter transaction details.", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "Yeni İşlem", message: nil, preferredStyle: .alert)
         
-        alertController.addTextField { (textField) in
-            textField.placeholder = "Description"
+        // Açıklama TextField
+        alertController.addTextField { textField in
+            textField.placeholder = "Açıklama"
         }
         
-        alertController.addTextField { (textField) in
-            textField.placeholder = "Amount"
+        // Tutar TextField
+        alertController.addTextField { textField in
+            textField.placeholder = "Tutar"
             textField.keyboardType = .decimalPad
         }
         
-        let typeActionSheet = UIAlertController(title: "Select Transaction Type", message: nil, preferredStyle: .actionSheet)
-        
-        for type in TransactionType.allCases {
-            let action = UIAlertAction(title: type.rawValue, style: .default) { [weak self, weak alertController] (_) in
-                guard let textFields = alertController?.textFields, textFields.count == 2,
-                      let description = textFields[0].text, !description.isEmpty,
-                      let amountText = textFields[1].text, !amountText.isEmpty,
-                      let amount = Double(amountText) else {
-                    // Kullanıcı geçerli bir açıklama ve miktar girmediyse bir hata mesajı gösterebilirsiniz.
-                    return
-                }
-                
-                let newTransaction = Transaction(description: description, amount: amount, type: type)
-                self?.transactions.append(newTransaction)
-                
-                if var currentAccount = self?.selectedAccount {
-                    let updatedCurrentBalance = currentAccount.currentBalance + (newTransaction.type == .received ? newTransaction.amount : -newTransaction.amount)
-                    let updatedFutureBalance = currentAccount.futureBalance + (newTransaction.type == .received ? newTransaction.amount : -newTransaction.amount)
-                    
-                    let updatedAccount = Account(name: currentAccount.name,
-                                                 email: currentAccount.email,
-                                                 currentBalance: updatedCurrentBalance,
-                                                 futureBalance: updatedFutureBalance)
-                    self?.selectedAccount = updatedAccount
-                    self?.updateBalanceLabels(account: updatedAccount)
-                    self?.transactionsTableView.reloadData()
-                }
-            }
-            typeActionSheet.addAction(action)
+        // Transaction Type TextField (picker için)
+        var typeTextField: UITextField?
+        alertController.addTextField { textField in
+            textField.placeholder = "İşlem Türü Seçin"
+            textField.tintColor = .clear // cursor'u gizle
+            typeTextField = textField
+            
+            // Picker ayarları
+            let pickerView = UIPickerView()
+            pickerView.delegate = self
+            pickerView.dataSource = self
+            textField.inputView = pickerView
         }
         
-        typeActionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        alertController.addAction(UIAlertAction(title: "Next", style: .default) { [weak self, weak alertController] _ in
-            guard let textFields = alertController?.textFields, textFields.count == 2,
-                  let description = textFields[0].text, !description.isEmpty,
-                  let amountText = textFields[1].text, !amountText.isEmpty,
-                  let amount = Double(amountText) else {
-                // Kullanıcı geçerli bir açıklama ve miktar girmediyse bir hata mesajı gösterebilirsiniz.
+        // Ekle Butonu
+        let addAction = UIAlertAction(title: "Ekle", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let desc = alertController.textFields?[0].text, !desc.isEmpty,
+                  let amtStr = alertController.textFields?[1].text, let amount = Double(amtStr),
+                  let selectedType = self.selectedTransactionType as TransactionType? else {
                 return
             }
-            self?.present(typeActionSheet, animated: true, completion: nil)
-        })
+            
+            let newTransaction = Transaction(description: desc, amount: amount, type: selectedType)
+            self.transactions.append(newTransaction)
+            
+            // Hesabı güncelle
+            guard var updatedAccount = self.selectedAccount else { return }
+            
+            switch selectedType {
+            case .paid:
+                updatedAccount.currentBalance -= amount
+            case .received:
+                updatedAccount.currentBalance += amount
+            case .payable:
+                updatedAccount.futureBalance -= amount
+            case .receivable:
+                updatedAccount.futureBalance += amount
+            }
+            
+            updatedAccount.transactions.append(newTransaction)
+            self.selectedAccount = updatedAccount
+            
+            self.updateBalanceLabels(account: updatedAccount)
+            self.saveTransactions()
+            self.transactionsTableView.reloadData()
+        }
         
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alertController.addAction(addAction)
+        alertController.addAction(UIAlertAction(title: "İptal", style: .cancel))
         
-        present(alertController, animated: true, completion: nil)
-    }}
+        present(alertController, animated: true)
+    }
+    
+    
+    
+    // MARK: - Persistence
+    func loadTransactions() {
+        guard let account = selectedAccount else { return }
+        
+        let accountKey = "account_\(account.email)"
+        if let accData = UserDefaults.standard.data(forKey: accountKey),
+           let savedAccount = try? JSONDecoder().decode(Account.self, from: accData) {
+            selectedAccount = savedAccount
+            transactions = savedAccount.transactions // Hesapla ilişkili işlemleri yükle
+        }
+    }
+    
+    func saveTransactions() {
+        guard let account = selectedAccount else { return }
+        
+        let accountKey = "account_\(account.email)"
+        if let accData = try? JSONEncoder().encode(account) {
+            UserDefaults.standard.set(accData, forKey: accountKey)
+        }
+    }
+    
+}
+
+
+extension AccountDetailViewController: UIPickerViewDataSource, UIPickerViewDelegate {
+    
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return TransactionType.allCases.count
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return TransactionType.allCases[row].rawValue
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedTransactionType = TransactionType.allCases[row]
+        
+        // Alert üzerindeki işlem türü textField'ını güncelle
+        if let alert = self.presentedViewController as? UIAlertController,
+           let typeField = alert.textFields?.first(where: { $0.placeholder == "İşlem Türü Seçin" }) {
+            typeField.text = selectedTransactionType.rawValue
+        }
+    }
+}
