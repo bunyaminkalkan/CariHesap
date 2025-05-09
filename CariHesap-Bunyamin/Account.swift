@@ -9,7 +9,7 @@ import Foundation
 
 struct Account: Codable {
     var name: String
-    var email: String // Örnek olarak e-posta da ekledik
+    var email: String // Email added as an example
     var currentBalance: Double
     var futureBalance: Double
     var transactions: [Transaction]

@@ -14,9 +14,9 @@ struct Transaction: Codable {
 }
 
 enum TransactionType: String, CaseIterable, Codable {
-    case paid = "Ödendi"
-    case received = "Alındı"
-    case payable = "Ödenecek"
-    case receivable = "Alınacak"
+    case paid = "Paid"
+    case received = "Received"
+    case payable = "Payable"
+    case receivable = "Receivable"
 }
 
