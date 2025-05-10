@@ -7,11 +7,20 @@
 
 import Foundation
 
-struct Account: Codable {
+struct Account: Codable, Identifiable {
     var id: UUID = UUID()
     var name: String
-    var email: String // Email added as an example
+    var email: String
     var currentBalance: Double
     var futureBalance: Double
     var transactions: [Transaction]
+    
+    // Convenience computed properties
+    var formattedCurrentBalance: String {
+        return String(format: "%.2f TL", currentBalance)
+    }
+    
+    var formattedFutureBalance: String {
+        return String(format: "%.2f TL", futureBalance)
+    }
 }

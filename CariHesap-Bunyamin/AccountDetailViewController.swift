@@ -204,7 +204,6 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
         selectedDate = sender.date
     }
     
-    // MARK: - Filter (IMPROVED)
     // MARK: - Filter (IMPROVED WITH OPTIONAL FILTERS)
     @IBAction func filterButtonTapped(_ sender: UIButton) {
         let alertController = UIAlertController(title: "Filter Transactions", message: nil, preferredStyle: .alert)
