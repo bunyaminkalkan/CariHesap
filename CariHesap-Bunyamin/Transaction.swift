@@ -22,10 +22,3 @@ enum TransactionType: String, CaseIterable, Codable {
     case receivable = "Receivable"
 }
 
-enum TransactionFilter {
-    case all
-    case type(TransactionType)
-    case dateRange(Date, Date)
-    case amount(Double, Double)
-}
-
