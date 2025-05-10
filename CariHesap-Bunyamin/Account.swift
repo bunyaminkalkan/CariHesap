@@ -8,6 +8,7 @@
 import Foundation
 
 struct Account: Codable {
+    var id: UUID = UUID()
     var name: String
     var email: String // Email added as an example
     var currentBalance: Double

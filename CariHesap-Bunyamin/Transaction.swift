@@ -8,9 +8,11 @@
 import Foundation
 
 struct Transaction: Codable {
+    var id: UUID = UUID()
     var description: String
     var amount: Double
     var type: TransactionType
+    var date: Date
 }
 
 enum TransactionType: String, CaseIterable, Codable {
@@ -18,5 +20,12 @@ enum TransactionType: String, CaseIterable, Codable {
     case received = "Received"
     case payable = "Payable"
     case receivable = "Receivable"
+}
+
+enum TransactionFilter {
+    case all
+    case type(TransactionType)
+    case dateRange(Date, Date)
+    case amount(Double, Double)
 }
 
