@@ -129,24 +129,77 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     
     // MARK: - Swipe to Delete Transaction (FIXED)
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let displayedTransactions = isFiltering ? filteredTransactions : transactions
+        guard indexPath.row < displayedTransactions.count else { return nil }
+        let transaction = displayedTransactions[indexPath.row]
+
+        var actions: [UIContextualAction] = []
+
+        // ✅ Onay (Tik) Aksiyonu
+        if transaction.type == .receivable || transaction.type == .payable {
+            let confirmAction = UIContextualAction(style: .normal, title: "✓") { [weak self] _, _, completionHandler in
+                guard let self = self else {
+                    completionHandler(false)
+                    return
+                }
+
+                var updatedTransaction = transaction
+
+                // Tipi güncelle
+                if transaction.type == .receivable {
+                    updatedTransaction.type = .received
+                    self.selectedAccount?.currentBalance += updatedTransaction.amount
+                    
+                } else if transaction.type == .payable {
+                    updatedTransaction.type = .paid
+                    self.selectedAccount?.currentBalance -= updatedTransaction.amount
+                }
+
+                // Ana listede güncelle
+                if let mainIndex = self.transactions.firstIndex(where: {
+                    $0.description == transaction.description &&
+                    $0.amount == transaction.amount &&
+                    $0.date == transaction.date
+                }) {
+                    self.transactions[mainIndex] = updatedTransaction
+                }
+
+                // Filtreli listede güncelle
+                if self.isFiltering {
+                    self.filteredTransactions[indexPath.row] = updatedTransaction
+                }
+
+                // UI ve veri güncelle
+                self.selectedAccount?.transactions = self.transactions
+                if let updatedAccount = self.selectedAccount {
+                    self.updateBalanceLabels(account: updatedAccount)
+                    self.saveTransactions(account: updatedAccount)
+                }
+
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+                completionHandler(true)
+            }
+
+            confirmAction.backgroundColor = .systemGreen
+            actions.append(confirmAction)
+        }
+
+        // 🗑️ Silme Aksiyonu
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, completionHandler) in
             guard let self = self else {
                 completionHandler(false)
                 return
             }
-            
-            // Get the transaction to delete based on whether we're showing filtered results
-            let displayedTransactions = self.isFiltering ? self.filteredTransactions : self.transactions
+
             guard indexPath.row < displayedTransactions.count else {
                 completionHandler(false)
                 return
             }
-            
+
             let transactionToDelete = displayedTransactions[indexPath.row]
-            
+
             // Remove from main transactions array
             if self.isFiltering {
-                // Find the index of this transaction in the main array
                 if let mainIndex = self.transactions.firstIndex(where: {
                     $0.description == transactionToDelete.description &&
                     $0.amount == transactionToDelete.amount &&
@@ -154,20 +207,16 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
                 }) {
                     self.transactions.remove(at: mainIndex)
                 }
-                // Also remove from filtered array
                 self.filteredTransactions.remove(at: indexPath.row)
             } else {
-                // When not filtering, simply remove from main array
                 self.transactions.remove(at: indexPath.row)
             }
-            
-            // Update account balance
+
             guard var updatedAccount = self.selectedAccount else {
                 completionHandler(false)
                 return
             }
-            
-            // Update balances based on transaction type
+
             switch transactionToDelete.type {
             case .paid:
                 updatedAccount.currentBalance += transactionToDelete.amount
@@ -180,22 +229,21 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
             case .receivable:
                 updatedAccount.futureBalance -= transactionToDelete.amount
             }
-            
-            // Update account with new transactions list
+
             updatedAccount.transactions = self.transactions
             self.selectedAccount = updatedAccount
-            
-            // Update UI
             self.updateBalanceLabels(account: updatedAccount)
             self.saveTransactions(account: updatedAccount)
             tableView.deleteRows(at: [indexPath], with: .automatic)
-            
+
             completionHandler(true)
         }
-        
-        return UISwipeActionsConfiguration(actions: [deleteAction])
+
+        actions.append(deleteAction)
+
+        return UISwipeActionsConfiguration(actions: actions)
     }
-    
+
     func updateBalanceLabels(account: Account) {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
