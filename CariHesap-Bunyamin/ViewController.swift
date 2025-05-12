@@ -1,52 +1,60 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
     // MARK: - Properties
-    
     @IBOutlet private weak var accountsTableView: UITableView!
-    @IBOutlet weak var gradientView: UIView!
+    @IBOutlet private weak var gradientView: UIView!
     
+    // MARK: - Private Properties
     private var accounts: [Account] = []
     
-    // MARK: - Cell Identifiers
-    
+    // MARK: - Constants
     private enum Constants {
         static let accountCellIdentifier = "AccountCell"
         static let detailSegueIdentifier = "goToDetailScreen"
         static let userDefaultsKey = "savedAccounts"
     }
     
-    // MARK: - Lifecycle Methods
+    // MARK: - Lazy Properties
+    private lazy var currencyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "TL"
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
     
+    // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshAccountsList()
+    }
+    
+    // MARK: - Setup Methods
+    private func setupUI() {
         addGradientBackground()
         setupTableView()
         loadAccounts()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        loadAccounts()
-        accountsTableView.reloadData()
+    private func addGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = gradientView.bounds
+        gradientLayer.colors = [
+            UIColor.systemBlue.cgColor,
+            UIColor.systemGreen.cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        
+        gradientView.layer.insertSublayer(gradientLayer, at: 0)
     }
-    
-    //MAARK: - Gradient
-    func addGradientBackground() {
-            let gradientLayer = CAGradientLayer()
-            gradientLayer.frame = gradientView.bounds
-            gradientLayer.colors = [
-                UIColor.systemBlue.cgColor,
-                UIColor.systemGreen.cgColor
-            ]
-            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-            gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-
-            gradientView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-    
-    // MARK: - Setup
     
     private func setupTableView() {
         accountsTableView.dataSource = self
@@ -54,24 +62,43 @@ class ViewController: UIViewController {
         accountsTableView.tableFooterView = UIView() // Removes empty cell separators
     }
     
-    // MARK: - Actions
+    // MARK: - Data Management
+    private func refreshAccountsList() {
+        loadAccounts()
+        accountsTableView.reloadData()
+    }
     
+    private func loadAccounts() {
+        accounts = UserDefaults.standard.decodeData(
+            forKey: Constants.userDefaultsKey,
+            type: [Account].self
+        ) ?? []
+    }
+    
+    private func saveAccounts() {
+        UserDefaults.standard.encodeAndSave(
+            accounts,
+            forKey: Constants.userDefaultsKey
+        )
+    }
+    
+    // MARK: - Actions
     @IBAction func newAccountButtonTapped(_ sender: UIButton) {
         presentNewAccountAlert()
     }
     
     // MARK: - Navigation
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == Constants.detailSegueIdentifier,
-           let destinationVC = segue.destination as? AccountDetailViewController,
-           let selectedAccount = sender as? Account {
-            destinationVC.selectedAccount = selectedAccount
-        }
+        guard
+            segue.identifier == Constants.detailSegueIdentifier,
+            let destinationVC = segue.destination as? AccountDetailViewController,
+            let selectedAccount = sender as? Account
+        else { return }
+        
+        destinationVC.selectedAccount = selectedAccount
     }
     
-    // MARK: - Private Methods
-    
+    // MARK: - Account Creation
     private func presentNewAccountAlert() {
         let alertController = UIAlertController(
             title: "New Account",
@@ -79,34 +106,47 @@ class ViewController: UIViewController {
             preferredStyle: .alert
         )
         
-        alertController.addTextField { $0.placeholder = "Name" }
-        alertController.addTextField {
-            $0.placeholder = "Email"
-            $0.keyboardType = .emailAddress
-        }
-        alertController.addTextField {
-            $0.placeholder = "Balance"
-            $0.keyboardType = .decimalPad
+        // Configure text fields
+        alertController.addTextField { textField in
+            textField.placeholder = "Name"
         }
         
+        alertController.addTextField { textField in
+            textField.placeholder = "Email"
+            textField.keyboardType = .emailAddress
+        }
+        
+        alertController.addTextField { textField in
+            textField.placeholder = "Balance"
+            textField.keyboardType = .decimalPad
+        }
+        
+        // Create actions
         let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
-            self?.handleNewAccountCreation(from: alertController)
+            self?.createNewAccount(from: alertController)
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         
+        // Add actions
         alertController.addAction(saveAction)
         alertController.addAction(cancelAction)
+        
         present(alertController, animated: true)
     }
     
-    private func handleNewAccountCreation(from alert: UIAlertController) {
+    private func createNewAccount(from alert: UIAlertController) {
         guard
-            let name = alert.textFields?[0].text, !name.isEmpty,
-            let email = alert.textFields?[1].text,
-            let balanceText = alert.textFields?[2].text,
+            let textFields = alert.textFields,
+            textFields.count == 3,
+            let name = textFields[0].text, !name.isEmpty,
+            let email = textFields[1].text, !email.isEmpty,
+            let balanceText = textFields[2].text,
             let currentBalance = Double(balanceText)
-        else { return }
+        else {
+            showValidationErrorAlert()
+            return
+        }
         
         let newAccount = Account(
             name: name,
@@ -121,26 +161,18 @@ class ViewController: UIViewController {
         accountsTableView.reloadData()
     }
     
-    // MARK: - UserDefaults
-    
-    private func loadAccounts() {
-        if let data = UserDefaults.standard.data(forKey: Constants.userDefaultsKey),
-           let decoded = try? JSONDecoder().decode([Account].self, from: data) {
-            accounts = decoded
-        } else {
-            accounts = []
-        }
-    }
-    
-    private func saveAccounts() {
-        if let encoded = try? JSONEncoder().encode(accounts) {
-            UserDefaults.standard.set(encoded, forKey: Constants.userDefaultsKey)
-        }
+    private func showValidationErrorAlert() {
+        let errorAlert = UIAlertController(
+            title: "Invalid Input",
+            message: "Please fill in all fields correctly.",
+            preferredStyle: .alert
+        )
+        errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(errorAlert, animated: true)
     }
 }
 
 // MARK: - UITableViewDataSource
-
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return accounts.count
@@ -152,26 +184,29 @@ extension ViewController: UITableViewDataSource {
             for: indexPath
         )
         
-        let account = accounts[indexPath.row]
-        
-        if let accountNameLabel = cell.viewWithTag(1) as? UILabel {
-            accountNameLabel.text = account.name
-        }
-        
-        if let currentBalanceLabel = cell.viewWithTag(2) as? UILabel {
-            currentBalanceLabel.text = "\(String(format: "%.2f", account.currentBalance)) TL"
-        }
-        
-        if let futureBalanceLabel = cell.viewWithTag(3) as? UILabel {
-            futureBalanceLabel.text = "\(String(format: "%.2f", account.futureBalance)) TL"
-        }
-        
+        configureCell(cell, with: accounts[indexPath.row])
         return cell
+    }
+    
+    private func configureCell(_ cell: UITableViewCell, with account: Account) {
+        guard
+            let accountNameLabel = cell.viewWithTag(1) as? UILabel,
+            let currentBalanceLabel = cell.viewWithTag(2) as? UILabel,
+            let futureBalanceLabel = cell.viewWithTag(3) as? UILabel
+        else { return }
+        
+        accountNameLabel.text = account.name
+        currentBalanceLabel.text = formatCurrency(account.currentBalance)
+        futureBalanceLabel.text = formatCurrency(account.futureBalance)
+    }
+    
+    private func formatCurrency(_ amount: Double) -> String {
+        return currencyFormatter.string(from: NSNumber(value: amount)) ??
+               "\(String(format: "%.2f", amount)) TL"
     }
 }
 
 // MARK: - UITableViewDelegate
-
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedAccount = accounts[indexPath.row]
@@ -192,5 +227,22 @@ extension ViewController: UITableViewDelegate {
         accounts.remove(at: indexPath.row)
         saveAccounts()
         accountsTableView.deleteRows(at: [indexPath], with: .automatic)
+    }
+}
+
+// MARK: - UserDefaults Extension
+extension UserDefaults {
+    func decodeData<T: Decodable>(forKey key: String, type: T.Type) -> T? {
+        guard let data = data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(type, from: data)
+    }
+    
+    func encodeAndSave<T: Encodable>(_ value: T, forKey key: String) {
+        guard let encoded = try? JSONEncoder().encode(value) else {
+            print("Error: Could not encode data")
+            return
+        }
+        set(encoded, forKey: key)
+        synchronize()
     }
 }

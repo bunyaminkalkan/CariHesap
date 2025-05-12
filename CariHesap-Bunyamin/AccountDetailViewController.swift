@@ -188,15 +188,15 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
         formatter.maximumFractionDigits = 2
         
         if let formattedCurrent = formatter.string(from: NSNumber(value: account.currentBalance)) {
-            currentBalanceLabel.text = "Current: \(formattedCurrent)"
+            currentBalanceLabel.text = "\(formattedCurrent)"
         } else {
-            currentBalanceLabel.text = "Current: \(String(format: "%.2f", account.currentBalance)) TL"
+            currentBalanceLabel.text = "\(String(format: "%.2f", account.currentBalance)) TL"
         }
         
         if let formattedFuture = formatter.string(from: NSNumber(value: account.futureBalance)) {
-            futureBalanceLabel.text = "Future: \(formattedFuture)"
+            futureBalanceLabel.text = "\(formattedFuture)"
         } else {
-            futureBalanceLabel.text = "Future: \(String(format: "%.2f", account.futureBalance)) TL"
+            futureBalanceLabel.text = "\(String(format: "%.2f", account.futureBalance)) TL"
         }
     }
     
