@@ -146,11 +146,18 @@
                                             <rect key="frame" x="0.0" y="0.0" width="301" height="100"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Description" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kzx-jq-CPF">
+                                                <label opaque="NO" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="1" verticalHuggingPriority="1" horizontalCompressionResistancePriority="1" verticalCompressionResistancePriority="1" fixedFrame="YES" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="2" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="150" translatesAutoresizingMaskIntoConstraints="NO" id="kzx-jq-CPF" customClass="TopAlignedLabel" customModule="CariHesap_Bunyamin" customModuleProvider="target">
                                                     <rect key="frame" x="15" y="10" width="150" height="40"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    <attributedString key="attributedText">
+                                                        <fragment content="Description">
+                                                            <attributes>
+                                                                <color key="NSColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                <font key="NSFont" metaFont="cellTitle"/>
+                                                                <paragraphStyle key="NSParagraphStyle" alignment="left" lineBreakMode="wordWrapping" baseWritingDirection="natural" lineSpacing="4" tighteningFactorForTruncation="0.0"/>
+                                                            </attributes>
+                                                        </fragment>
+                                                    </attributedString>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" tag="2" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Amount" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SMn-Jz-y8p">
@@ -174,7 +181,7 @@
                                                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" tag="22" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eyC-fY-ZpK">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" tag="20" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eyC-fY-ZpK">
                                                     <rect key="frame" x="175" y="65" width="20" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </imageView>
@@ -182,13 +189,17 @@
                                                     <rect key="frame" x="15" y="65" width="20" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </imageView>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" tag="20" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VtW-io-aeZ">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Image 9" translatesAutoresizingMaskIntoConstraints="NO" id="VtW-io-aeZ">
                                                     <rect key="frame" x="175" y="10" width="20" height="20"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                </imageView>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Image 10" translatesAutoresizingMaskIntoConstraints="NO" id="GwS-9c-OPv">
+                                                    <rect key="frame" x="15" y="10" width="20" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </imageView>
                                             </subviews>
                                         </tableViewCellContentView>
-                                        <color key="backgroundColor" red="0.45962095260000002" green="0.78246802090000001" blue="0.72124427560000004" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                        <color key="backgroundColor" white="0.97890636101871931" alpha="0.27396923343077401" colorSpace="calibratedWhite"/>
                                         <color key="tintColor" systemColor="labelColor"/>
                                     </tableViewCell>
                                 </prototypes>
@@ -267,6 +278,7 @@
                     <connections>
                         <outlet property="currentBalanceLabel" destination="ZnH-Lk-rB8" id="vjl-lU-bz4"/>
                         <outlet property="futureBalanceLabel" destination="LYx-jL-71A" id="Prt-dh-1PE"/>
+                        <outlet property="gradientView" destination="rVg-wb-K89" id="Kw2-66-EJ8"/>
                         <outlet property="transactionsTableView" destination="Mbb-5Y-lgr" id="UCy-rg-owO"/>
                     </connections>
                 </viewController>
@@ -278,8 +290,10 @@
     <resources>
         <image name="Image" width="512" height="512"/>
         <image name="Image 1" width="512" height="512"/>
+        <image name="Image 10" width="128" height="128"/>
         <image name="Image 2" width="512" height="512"/>
         <image name="Image 8" width="128" height="128"/>
+        <image name="Image 9" width="128" height="128"/>
         <image name="person.fill.badge.plus" catalog="system" width="128" height="125"/>
         <image name="plus.square.fill.on.square.fill" catalog="system" width="128" height="116"/>
         <systemColor name="labelColor">

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7309DA492DD2283800A68AA5 /* TopAlignedLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7309DA482DD2283800A68AA5 /* TopAlignedLabel.swift */; };
 		735A78E42DC8FD160005B4FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A78E32DC8FD160005B4FE /* AppDelegate.swift */; };
 		735A78E62DC8FD160005B4FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A78E52DC8FD160005B4FE /* SceneDelegate.swift */; };
 		735A78E82DC8FD160005B4FE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A78E72DC8FD160005B4FE /* ViewController.swift */; };
@@ -19,6 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7309DA482DD2283800A68AA5 /* TopAlignedLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopAlignedLabel.swift; sourceTree = "<group>"; };
 		735A78E02DC8FD160005B4FE /* CariHesap-Bunyamin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CariHesap-Bunyamin.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		735A78E32DC8FD160005B4FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		735A78E52DC8FD160005B4FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 		735A78E22DC8FD160005B4FE /* CariHesap-Bunyamin */ = {
 			isa = PBXGroup;
 			children = (
+				7309DA482DD2283800A68AA5 /* TopAlignedLabel.swift */,
 				735A78E32DC8FD160005B4FE /* AppDelegate.swift */,
 				735A78E52DC8FD160005B4FE /* SceneDelegate.swift */,
 				735A78E72DC8FD160005B4FE /* ViewController.swift */,
@@ -149,6 +152,7 @@
 			files = (
 				735A78E82DC8FD160005B4FE /* ViewController.swift in Sources */,
 				735A79002DC908530005B4FE /* AccountDetailViewController.swift in Sources */,
+				7309DA492DD2283800A68AA5 /* TopAlignedLabel.swift in Sources */,
 				735A79022DC913D00005B4FE /* Transaction.swift in Sources */,
 				735A78FC2DC905BF0005B4FE /* Account.swift in Sources */,
 				735A78E42DC8FD160005B4FE /* AppDelegate.swift in Sources */,

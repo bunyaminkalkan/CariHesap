@@ -6,6 +6,7 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     @IBOutlet weak var transactionsTableView: UITableView!
     @IBOutlet weak var currentBalanceLabel: UILabel!
     @IBOutlet weak var futureBalanceLabel: UILabel!
+    @IBOutlet private weak var gradientView: UIView!
     
     // MARK: - Properties
     var selectedAccount: Account?
@@ -26,32 +27,38 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+    
+    private func setupUI() {
+        addGradientBackground()
         
         transactionsTableView.dataSource = self
         transactionsTableView.delegate = self
         
-        // Register for keyboard notifications to avoid UI issues
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(keyboardWillShow),
-                                               name: UIResponder.keyboardWillShowNotification,
-                                               object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(keyboardWillHide),
-                                               name: UIResponder.keyboardWillHideNotification,
-                                               object: nil)
-        
         loadTransactions()
-        
+    
         if let account = selectedAccount {
             updateBalanceLabels(account: account)
         }
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
+    // MARK: - Gradient Handling
+    private func addGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = gradientView.bounds
+        gradientLayer.colors = [
+            UIColor.systemGreen.cgColor,
+            UIColor.systemBlue.cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         
-        // Remove keyboard observers
-        NotificationCenter.default.removeObserver(self)
+        gradientView.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     // MARK: - Keyboard Handling
@@ -88,18 +95,11 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     private func configureCell(_ cell: UITableViewCell, with transaction: Transaction) {
         if let descriptionLabel = cell.viewWithTag(1) as? UILabel {
             descriptionLabel.text = transaction.description
+            descriptionLabel.numberOfLines = 0
         }
         
         if let amountLabel = cell.viewWithTag(2) as? UILabel {
             amountLabel.text = "\(String(format: "%.2f", transaction.amount)) TL"
-            
-            // Set color based on transaction type for better visual feedback
-            switch transaction.type {
-            case .paid, .payable:
-                amountLabel.textColor = .systemRed
-            case .received, .receivable:
-                amountLabel.textColor = .systemGreen
-            }
         }
         
         if let typeLabel = cell.viewWithTag(3) as? UILabel {
@@ -111,6 +111,20 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
             formatter.dateStyle = .medium
             dateLabel.text = formatter.string(from: transaction.date)
         }
+        
+        if let iconImageView = cell.viewWithTag(20) as? UIImageView {
+                switch transaction.type {
+                case .paid:
+                    iconImageView.image = UIImage(named: "Image 4")
+                case .received:
+                    iconImageView.image = UIImage(named: "Image 5")
+                case .payable:
+                    iconImageView.image = UIImage(named: "Image 6")
+                case .receivable:
+                    iconImageView.image = UIImage(named: "Image 7")
+                }
+                
+            }
     }
     
     // MARK: - Swipe to Delete Transaction (FIXED)
@@ -157,8 +171,10 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
             switch transactionToDelete.type {
             case .paid:
                 updatedAccount.currentBalance += transactionToDelete.amount
+                updatedAccount.futureBalance += transactionToDelete.amount
             case .received:
                 updatedAccount.currentBalance -= transactionToDelete.amount
+                updatedAccount.futureBalance -= transactionToDelete.amount
             case .payable:
                 updatedAccount.futureBalance += transactionToDelete.amount
             case .receivable:
@@ -205,120 +221,103 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     }
     
     // MARK: - Filter (IMPROVED WITH OPTIONAL FILTERS)
+    private let allTypesLabel = "All Types"
+
     @IBAction func filterButtonTapped(_ sender: UIButton) {
         let alertController = UIAlertController(title: "Filter Transactions", message: nil, preferredStyle: .alert)
-        
-        // Create local variables to track selections
-        var shouldFilterByType = false
-        var selectedType: TransactionType = self.selectedTransactionType
-        
-        // Use class properties for date ranges
-        // Default dates are now only set when actually applying the filter
-        
-        // Transaction Type Picker
+
+        // Transaction Type
         alertController.addTextField { textField in
-            textField.placeholder = "Select Transaction Type (Optional)"
-            textField.tintColor = .clear
-            textField.text = "All Types" // Default text when no type filter is selected
-            
-            let pickerView = UIPickerView()
-            pickerView.delegate = self
-            pickerView.dataSource = self
-            pickerView.tag = 1000 // Tag to identify in delegate methods
-            
-            // Add "All Types" option as first row
-            // The picker view will show actual types from index 1 onwards
-            
-            textField.inputView = pickerView
+            self.configureTransactionTypeField(textField)
         }
-        
-        // Start Date TextField
+
+        // Start Date
         alertController.addTextField { textField in
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            
-            textField.placeholder = "Select Start Date (Optional)"
-            textField.tintColor = .clear
-            textField.inputView = self.createDatePicker(for: textField, isStartDate: true)
-            
-            if let startDate = self.selectedStartDate {
-                textField.text = formatter.string(from: startDate)
-            }
+            self.configureDateField(textField, isStartDate: true)
         }
-        
-        // End Date TextField
+
+        // End Date
         alertController.addTextField { textField in
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            
-            textField.placeholder = "Select End Date (Optional)"
-            textField.tintColor = .clear
-            textField.inputView = self.createDatePicker(for: textField, isStartDate: false)
-            
-            if let endDate = self.selectedEndDate {
-                textField.text = formatter.string(from: endDate)
-            }
+            self.configureDateField(textField, isStartDate: false)
         }
-        
-        // Inside filterButtonTapped function:
+
         let filterAction = UIAlertAction(title: "Apply Filter", style: .default) { [weak self] _ in
             guard let self = self else { return }
-            
+
             var filters: [(Transaction) -> Bool] = []
-            var isAnyFilterApplied = false
-            
-            // Get selected type from picker if available
-            if let typeField = alertController.textFields?[0],
-               typeField.text != "All Types" && !typeField.text!.isEmpty {
-                isAnyFilterApplied = true
+
+            // Type Filter
+            if let typeText = alertController.textFields?[0].text,
+               typeText != self.allTypesLabel {
                 filters.append { $0.type == self.selectedTransactionType }
             }
-            
-            // Add date range filters if selected
-            if let startDateField = alertController.textFields?[1], !startDateField.text!.isEmpty,
-               let startDate = self.selectedStartDate {
-                isAnyFilterApplied = true
-                filters.append { $0.date >= startDate }
+
+            // Date Filters (normalized to just day/month/year)
+            if let startDate = self.selectedStartDate {
+                let normalizedStart = self.normalizeDate(startDate)
+                filters.append { self.normalizeDate($0.date) >= normalizedStart }
             }
-            
-            if let endDateField = alertController.textFields?[2], !endDateField.text!.isEmpty,
-               let endDate = self.selectedEndDate {
-                isAnyFilterApplied = true
-                // Include transactions on the end date (end of day)
-                let endOfDay = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) ?? endDate
-                filters.append { $0.date <= endOfDay }
+
+            if let endDate = self.selectedEndDate {
+                let normalizedEnd = self.normalizeDate(endDate)
+                filters.append { self.normalizeDate($0.date) <= normalizedEnd }
             }
-            
-            // Apply filters only if at least one filter is applied
-            if isAnyFilterApplied {
-                self.filteredTransactions = self.transactions.filter { transaction in
-                    return filters.allSatisfy { filter in filter(transaction) }
-                }
-                self.isFiltering = true
-            } else {
-                // No filters selected, show all
-                self.isFiltering = false
+
+            self.isFiltering = !filters.isEmpty
+            self.filteredTransactions = self.transactions.filter { txn in
+                filters.allSatisfy { $0(txn) }
             }
-            
+
             self.transactionsTableView.reloadData()
         }
-        
+
         let clearAction = UIAlertAction(title: "Clear Filters", style: .destructive) { [weak self] _ in
-            guard let self = self else { return }
-            
-            self.filteredTransactions = []
-            self.isFiltering = false
-            self.selectedStartDate = nil
-            self.selectedEndDate = nil
-            self.transactionsTableView.reloadData()
+            self?.clearFilters()
         }
-        
+
         alertController.addAction(filterAction)
         alertController.addAction(clearAction)
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
+
         present(alertController, animated: true)
     }
+    
+    private func normalizeDate(_ date: Date) -> Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
+    private func configureTransactionTypeField(_ textField: UITextField) {
+        textField.placeholder = "Select Transaction Type (Optional)"
+        textField.tintColor = .clear
+        textField.text = allTypesLabel
+
+        let pickerView = UIPickerView()
+        pickerView.delegate = self
+        pickerView.dataSource = self
+        pickerView.tag = 1000
+        textField.inputView = pickerView
+    }
+
+    private func configureDateField(_ textField: UITextField, isStartDate: Bool) {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        textField.placeholder = isStartDate ? "Select Start Date (Optional)" : "Select End Date (Optional)"
+        textField.tintColor = .clear
+        textField.inputView = createDatePicker(for: textField, isStartDate: isStartDate)
+        let date = isStartDate ? selectedStartDate : selectedEndDate
+        if let date = date {
+            textField.text = formatter.string(from: date)
+        }
+    }
+
+    private func clearFilters() {
+        filteredTransactions = []
+        isFiltering = false
+        selectedStartDate = nil
+        selectedEndDate = nil
+        transactionsTableView.reloadData()
+    }
+
     
     // Helper function to create a date picker for the given text field
     func createDatePicker(for textField: UITextField, isStartDate: Bool) -> UIView {
@@ -449,7 +448,6 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
     }
     
     // Extracted method to add transaction - makes testing easier
-    // Extracted method to add transaction - makes testing easier
     func addTransaction(_ newTransaction: Transaction) {
         // Insert at the beginning for most recent first
         transactions.insert(newTransaction, at: 0)
@@ -459,8 +457,10 @@ class AccountDetailViewController: UIViewController, UITableViewDataSource, UITa
             switch newTransaction.type {
             case .paid:
                 account.currentBalance -= newTransaction.amount
+                account.futureBalance -= newTransaction.amount
             case .received:
                 account.currentBalance += newTransaction.amount
+                account.futureBalance += newTransaction.amount
             case .payable:
                 account.futureBalance -= newTransaction.amount
             case .receivable:
